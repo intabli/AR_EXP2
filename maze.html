@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<header>
+    <meta  http-equiv="Content-Type" content= "text/html;charset=utf-8">
+    <style>
+    html, body {
+
+        margin: 0px;
+        border: 0px;
+        padding: 0px;
+    }
+    #gl-canvas{
+                position:fixed;
+                padding: 0px;
+                top: 0px;
+                left: 0px;
+                border: 0px;
+                margin: 0px;
+                z-index: -1;
+            }
+    #maze_menu{
+display:block;
+        position: absolute;
+        right: 0px;
+       height: 100%;
+        width: 250px;
+        z-index: 1;
+        background-color: rgb(0,0,0,.3);
+        margin: 0;
+        padding: 0;
+       
+        text-align: center;
+        color: rgb(255,255,255,255);
+
+
+    }
+    .menu_button{
+margin: 5px;
+
+       
+        height:30px;
+        width: 180px;
+    }
+    .menu_select{
+        margin:5px;
+        height: 20px;
+        width: 180px;
+
+    }
+    .catagory{
+        border: 3px solid white;
+        align-items:center;
+        align-content: center;
+        text-align: center;
+        }
+    .number_input{
+        width: 4em;
+       margin: 15px;
+      
+       bottom:0;
+    }
+    .option{
+        width: auto;
+       display: flex;
+       flex-direction: row;
+        justify-content: center;
+       
+        padding: 0;
+    }
+    h2{
+        margin:0;
+        padding:0;
+    }
+    #change_maze{
+        display:none;
+    }
+    #resume{
+        display: none;
+    }
+   
+   
+    </style>
+    <script id = "vertex-shader-1" type = "x-shader/x-vertex">
+        attribute vec4 aposition;
+        varying vec4 vposition;
+        void  main(){
+            vposition = aposition;
+            gl_Position = aposition;
+            gl_Position.z = 1.0;
+
+        }
+    </script>
+    <script id = "fragment-shader-1" type = "x-shader/x-fragment">
+        precision mediump float;
+        uniform samplerCube skybox;
+        uniform mat4 inverseprojection;
+        varying vec4 vposition;
+        void main(){
+            vec4 dir_vec = normalize(inverseprojection * vposition);
+            gl_FragColor = textureCube(skybox,dir_vec.xyz/dir_vec.w);
+            
+
+
+
+
+        }
+    </script>
+    <script id = "vertex-shader-0" type = "x-shader/x-vertex">
+    attribute vec4 aposition;
+    attribute vec2 atextcoord;
+    attribute vec3 anormal;
+    uniform mat4 umatrix;
+    uniform vec3 camera_pos;
+    varying vec2 vtextcoord;
+    varying vec3 vnormal;
+    varying vec3 vsurfaceToView;
+    void main(){
+    gl_Position = umatrix * aposition;
+    vtextcoord = atextcoord;
+    vnormal = anormal;
+    vsurfaceToView = camera_pos - aposition.xyz;
+
+    }
+
+    </script>
+    <script id = "fragment-shader-0" type = "x-shader/x-fragment">
+        precision mediump float;
+        varying vec2 vtextcoord;
+        varying vec3 vnormal;
+        varying vec3 vsurfaceToView;
+        uniform sampler2D utexture;
+        uniform vec3 ureverse_light_dir;
+        uniform int wall_flag;
+        uniform float udiffuse;
+        uniform float uspecular;
+        uniform float ushine;
+        void main(){
+            vec3 normal = normalize(vnormal);
+            float difuse_light = udiffuse*max(dot(normal,ureverse_light_dir),0.0);
+
+            gl_FragColor = texture2D( utexture , vtextcoord );
+            gl_FragColor.rgb*= difuse_light + 1.0 - udiffuse;
+
+            if(wall_flag == 1){
+            vec3 surfaceToView = normalize(vsurfaceToView);
+            vec3 halfVector = normalize(ureverse_light_dir + surfaceToView);
+            float specular_light = pow(max(dot(normal, halfVector),0.0),ushine);
+            gl_FragColor.rgb+= uspecular*specular_light;
+        }
+        
+
+
+        }
+    </script>
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="maze.js"></script>
+</header>
+<body>
+    
+    <div id = "maze_menu">
+        <div class = "catagory">
+        <h1><b>Maze Menu</b></h1>
+    </div>
+        <div class = "catagory">
+        <h2>Lighting</h2>
+        <div class = "option">
+        <p>Diffuse </p>
+        <input type="range" min="0" max="1" value=".5"  step = ".0001"id= "diffuse"></input>
+        </div>
+        <div class = "option"><p>Specular </p>
+        <input type="range" min="0" max="1" value=".2" step =".0001" id= "specular"></input>
+        </div>
+    <div class = "option"><p>Shine</p>
+        <input type="range" min="10" max="500" value="30" id= "shine"></input>
+    </div>
+    </div>
+        <div class = "catagory">
+        <h2>Textures</h2>
+        <select id= "platform_texture" class = "menu_select">
+            <option value="0">Platform Texture</option>
+            <option value = "1">Light Brick</option>
+            <option value = "2">Dark Brick</option>
+            <option value = "3">Paving</option>
+            <option value = "4">Concrete</option>
+            <option value = "5">Tan Stone Wall</option>
+            <option value = "6">Red Stone Wall</option>
+            <option value = "7">Stone Floor</option>
+            <option value = "8">Metal Bolted</option>
+            <option value = "9">Metal</option>
+            <option value = "10">Cloves</option>
+            <option value = "11">Grass</option>
+        </select>
+        <select id = "wall_texture" class = "menu_select">
+            <option value = "0">Wall Texture</option>
+            <option value = "1">Light Brick</option>
+            <option value = "2">Dark Brick</option>
+            <option value = "3">Paving</option>
+            <option value = "4">Concrete</option>
+            <option value = "5">Tan Stone Wall</option>
+            <option value = "6">Red Stone Wall</option>
+            <option value = "7">Stone Floor</option>
+            <option value = "8">Metal Bolted</option>
+            <option value = "9">Metal</option>
+            <option value = "10">Cloves</option>
+            <option value = "11">Grass</option>
+            
+        </select>
+        </div>
+        
+        <div class = "catagory" id =  "maze_parameters">
+        <h2>Maze Options</h2>
+        <div class = "option">
+        <p>Cell Size</p>
+       <input type ="number" class = "number_input" id= "cell_size" value = "2" step = ".1" min = "1" >
+       </div>
+
+       <div class = "option" >
+        <p>Wall Height</p>
+        <input type ="number" class = "number_input" id= "wall_height" value = "3" step = ".1" min = "0.0" >
+        </div>
+        <div class = "option">
+        <p>Wall Width</p>
+        <input type ="number" class = "number_input" id= "wall_width" value = ".5" step = ".1" min = "0.0" >
+        </div>
+        
+        <div class = "option" >
+            
+            <input type ="number" class = "number_input" id= "rows" value = "20" step = "1" min = "4" >
+            <p><b>X</b></p>
+            <input type ="number" class = "number_input" id= "columns" value = "20" step = "1" min = "4" >
+            </div>
+        <button id = "GM"class = "menu_button"><b>Generate Maze</b></button>
+        </div>
+        
+    <div class = "catagory">
+            <h2>Player</h2>
+            <div class= "option">
+                <p>Height</p>
+                <input type ="number" class = "number_input" id= "pheight" value = "1" step = ".1" min = ".1" >
+            </div>
+            
+            <div class= "option"><p>Max Velocity</p><input type ="number" class = "number_input" id= "velocity" value = "8" step = ".1" min = "0" >
+                </div>
+        
+        <div class= "option"><p>Acceleration</p><input type ="number" class = "number_input" id= "acceleration" value = ".05" step = ".001" min = ".01" >
+        </div>
+        <div class = "option">
+            <p>Sensativity </p>
+            <input type="range" min="0.0" max="3.0" value=".4" step = ".01"id= "sensativity"></input>
+            </div>
+        <button id = "start_game" class = "menu_button"><b>Start Game</b></button>
+        <button id = "change_maze" class = "menu_button"><b>Change Maze</b></button>
+        <button id = "resume" class = "menu_button"><b>Resume</b></button>
+        </div>
+        <div class = "catagory">
+        
+            <p>Controles: w, a, s, d, p, mouse, scroll</p>
+            
+           
+
+        </div>
+        
+    </div>
+    <canvas id = "gl-canvas"  height = "100%"  width = "100%" ></canvas>
+</body>
+
+
+</html>

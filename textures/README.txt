@@ -1,0 +1,2 @@
+The bolted metal(metal2.png) and stone flooring (stone_flooring.png) were sourced from https://opengameart.org/content/nekkrobox-world-textures.  The grass (grass 1.png), paving (paving 4.png)  and clover(clover 1.png).  The conconcrete (concrete.jpg) is sourced from https://opengameart.org/content/concrete-wall-grey-with-water-marks-512px under CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/.   
+The skybox images were sourced from https://opengameart.org/content/miramar-skybox.  There is a seperate Readme in envmap_miramar for more info.
